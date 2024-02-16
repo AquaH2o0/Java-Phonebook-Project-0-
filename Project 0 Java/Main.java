@@ -2,16 +2,17 @@ import java.util.Scanner;
 
 public class Main {
 
-    private static final String[][] MENUS = {
+    private static final String[][] MENUS = { {
             // Main Menu
-            {"Add New Contact", "Edit Contact", "Delete Contact", "View Phonebook", "Exit"},
-            // Edit Contact Menu
-            {"Student Number", "First Name", "Last Name", "Occupation", "Country Code",
-                    "Area Code", "Phone Number", "None - Go back to Main Menu"},
-            // Menu for View Phonebook
-            {"View All", "View Contact through ID", "View Contacts through Country Code",
-                    "Go back to Main Menu"},
-    };
+            "Add New Contact", "Edit Contact", "Delete Contact", "View Phonebook", "Exit" },
+            {
+                    // Edit Contact Menu
+                    "Student Number", "First Name", "Last Name", "Occupation", "Country Code",
+                    "Area Code", "Phone Number", "None - Go back to Main Menu" },
+            {
+                    // Menu for View Phonebook
+                    "View All", "View Contact through ID", "View Contacts through Country Code",
+                    "Go back to Main Menu" }, };
     private static final Scanner input = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -25,64 +26,93 @@ public class Main {
                     pb.insert(createNewPerson());
                     break;
                 case 2:
-                    String editMenuPrompt = "Enter student number to edit: ";
-                    String studentNumber = prompt(editMenuPrompt);
-                    Person personToEdit = pb.getContact(studentNumber);
-                    if (personToEdit != null) {
-                        int editOpt;
-                        do {
-                            System.out.println("Here is the existing information about " + studentNumber + ":");
-                            System.out.println(personToEdit);
+                    String editMenuPrompt = "Select information to edit:\n";
+                    showMenu(2, 1);
+                    int editOpt = Integer.parseInt(prompt(editMenuPrompt + "Enter option: "));
+                    Person personToEdit = null;
 
-                            showMenu(2, 1);
-                            editOpt = Integer.parseInt(prompt("Enter choice: "));
-                            switch (editOpt) {
-                                case 1:
-                                    String newStudentNumber = prompt("Enter new student number: ");
-                                    personToEdit.setId(newStudentNumber);
-                                    break;
-                                case 2:
-                                    String newSurname = prompt("Enter new surname: ");
-                                    personToEdit.setLName(newSurname);
-                                    break;
-                                case 3:
-                                    // Handle editing gender
-                                    break;
-                                case 4:
-                                    String newOccupation = prompt("Enter new occupation: ");
-                                    personToEdit.setOccupation(newOccupation);
-                                    break;
-                                case 5:
-                                    int newCountryCode = Integer.parseInt(prompt("Enter new country code: "));
-                                    personToEdit.setCountryCode(newCountryCode);
-                                    break;
-                                case 6:
-                                    // Handle editing area code
-                                    break;
-                                case 7:
-                                    String newPhoneNumber = prompt("Enter new phone number: ");
-                                    personToEdit.setContactNum(newPhoneNumber);
-                                    break;
-                                case 8:
-                                    // Exit from the edit loop
-                                    break;
-                                default:
-                                    System.out.println("Invalid option!");
+                    switch (editOpt) {
+                        case 1:
+                            personToEdit = pb.getContact(prompt("Enter contact ID to edit: "));
+                            if (personToEdit != null) {
+                                personToEdit.setFName(prompt("Enter new First Name: "));
+                            } else {
+                                System.out.println("Contact not found!");
                             }
-
-                            System.out.println("Modified information:");
-                            System.out.println(personToEdit);
-                        } while (editOpt != 8);
-
-                    } else {
-                        System.out.println("Student with number " + studentNumber + " not found!");
+                            break;
+                        case 2:
+                            personToEdit = pb.getContact(prompt("Enter contact ID to edit: "));
+                            if (personToEdit != null) {
+                                personToEdit.setLName(prompt("Enter new Last Name: "));
+                            } else {
+                                System.out.println("Contact not found!");
+                            }
+                            break;
+                        // Similarly, update other fields as needed (Sex, Occupation, etc.)
+                        // Add more cases as needed
+                        case 8:
+                            break;
+                        default:
+                            System.out.println("Invalid option!");
                     }
                     break;
+
                 case 3:
-                    deleteEntryFromAseanPhonebook(pb);
+                    String id = prompt("Enter contact ID to delete: ");
+                    Person p = pb.getContact(id);
+                    if (p != null) {
+                        Person deletedContact = pb.deleteContact(id);
+                        if (deletedContact != null) {
+                            System.out.println("Contact has been successfully deleted!");
+                        }
+                    } else {
+                        System.out.println("This contact does not exist!");
+                    }
                     break;
                 case 4:
-                    viewSearchAseanPhonebook(pb);
+                    while (true) {
+                        showMenu(3, 1);
+                        int showOpt = Integer.parseInt(prompt("Enter option:"));
+                        if (showOpt == 1) {
+                            System.out.println(pb);
+                        } else if (showOpt == 2) {
+                            String targetId = prompt("Enter id to search: ");
+                            Person target = pb.getContact(targetId);
+                            if (target != null) {
+                                System.out.println(target);
+                            } else {
+                                System.out.println("No contact exists with that surname!");
+                            }
+                        } else if (showOpt == 3) {
+                            int ccCount = 0;
+                            int[] countryCodes = new int[9];
+                            while (true) {
+                                int choice = Integer.parseInt(prompt("Enter Country Code: "));
+                                int countryCode = convertChoices(choice);
+                                // Print if input is 0
+                                if (countryCode == 0) {
+                                    pb.printContactsFromCountryCodes(countryCodes);
+                                    break;
+                                }
+                                // Check if area code is already inputted
+                                boolean exists = false;
+                                for (int a : countryCodes) {
+                                    if (a == countryCode) {
+                                        System.out.println("This area code has already been inputted!");
+                                        exists = true;
+                                        break;
+                                    }
+                                }
+                                // Only add if area codes isn't part of the array...
+                                if (!exists) {
+                                    countryCodes[ccCount] = countryCode;
+                                    ccCount++;
+                                }
+                            }
+                        } else if (showOpt == 4) {
+                            break;
+                        }
+                    }
                     break;
                 case 5:
                     exit = true;
@@ -95,62 +125,22 @@ public class Main {
         }
     }
 
-    private static void deleteEntryFromAseanPhonebook(Phonebook pb) {
-        String studentNumber = prompt("Enter student number to delete: ");
-        Person personToDelete = pb.getContact(studentNumber);
-        if (personToDelete != null) {
-            String confirmDelete = prompt("Are you sure you want to delete it [Y/N]? ").toUpperCase();
-            if (confirmDelete.equals("Y")) {
-                pb.deleteContact(studentNumber);
-                System.out.println("Deletion successful");
-            } else {
-                System.out.println("Deletion did not proceed");
-            }
-        } else {
-            System.out.println("Student with number " + studentNumber + " not found!");
-        }
-    }
-
-    private static void viewSearchAseanPhonebook(Phonebook pb) {
-        while (true) {
-            showSearchMenu();
-            int searchOpt = Integer.parseInt(prompt("Enter option: "));
-            switch (searchOpt) {
-                case 1:
-                    searchByCountry(pb);
-                    break;
-                case 2:
-                    searchBySurname(pb);
-                    break;
-                case 3:
-                    return; // Go back to main menu
-                default:
-                    System.out.println("Invalid option!");
-            }
-        }
-    }
-
-    private static void showSearchMenu() {
-        System.out.println("[1] Search by country");
-        System.out.println("[2] Search by surname");
-        System.out.println("[3] Go back to main menu");
-    }
-
-    private static void searchByCountry(Phonebook pb) {
-        // TODO: Implement according to provided instructions
-    }
-
-    private static void searchBySurname(Phonebook pb) {
-        String surname = prompt("Enter surname: ");
-        Person foundPerson = pb.getContactBySurname(surname);
-        if (foundPerson != null) {
-            System.out.println("Found student:");
-            System.out.println(foundPerson);
-        } else {
-            System.out.println("No student found with the surname: " + surname);
-        }
-    }
-
+    /**
+     * Show menu based on given index. <br>
+     * <br>
+     * 1 for Main Menu. <br>
+     * <br>
+     * 2 for Edit Contact Menu. <br>
+     * <br>
+     * 3 for View Phonebook Menu. <br>
+     * <br>
+     * 4 for Country Code Menu.
+     * 
+     * @param menuIdx     Index of the menu to be shown.
+     * @param inlineTexts Number of menu options to be printed in a single line. Set
+     *                    to 1 if you
+     *                    want every line to only have one menu option.
+     */
     private static void showMenu(int menuIdx, int inlineTexts) {
         String[] menu = MENUS[menuIdx - 1];
         int count = 0;
@@ -167,37 +157,62 @@ public class Main {
         }
     }
 
-    private static int convertChoice(int opt) {
-        switch (opt) {
+    /**
+     * Convert choices from the menu into their appropriate country code values.
+     * 
+     * @return Country code value of the menu choice.
+     */
+    private static int convertChoices(int choice) {
+        int countryCode;
+
+        switch (choice) {
             case 1:
-                return 60; // Federation of Malaysia
+                countryCode = 60;
+                break;
             case 2:
-                return 62; // Republic of Indonesia
+                countryCode = 62;
+                break;
             case 3:
-                return 63; // Republic of the Philippines
+                countryCode = 63;
+                break;
             case 4:
-                return 65; // Republic of Singapore
+                countryCode = 65;
+                break;
             case 5:
-                return 66; // Kingdom of Thailand
+                countryCode = 66;
+                break;
             case 6:
-                return 84; // Socialist Republic of Vietnam
+                countryCode = 84;
+                break;
             case 7:
-                return 673; // Brunei Darussalam
+                countryCode = 673;
+                break;
             case 8:
-                return 855; // Kingdom of Cambodia
+                countryCode = 855;
+                break;
             case 9:
-                return 856; // Lao People’s Democratic Republic
+                countryCode = 856;
+                break;
             case 10:
-                return 95; // Republic of the Union of Myanmar
+                countryCode = 95;
+                break;
             case 11:
-                return 670; // Democratic Republic of Timor Leste
+                countryCode = 670;
+                break;
             default:
-                return 0; // Default value if the choice is not recognized
+                countryCode = -1;
+                break;
         }
+
+        return countryCode;
     }
 
+    /**
+     * Create a new person object using a slightly complicated setup.
+     * 
+     * @return Newly created person object.
+     */
     private static Person createNewPerson() {
-        // ... (rest of the code remains unchanged)
         String id, fname, lname, sex, occupation, contactNum;
         int countryCode, areaCode;
         id = prompt("Enter Contact ID: ");
@@ -205,12 +220,20 @@ public class Main {
         lname = prompt("Enter Last Name: ");
         occupation = prompt("Enter Occupation: ");
         sex = prompt("Enter sex/gender: ");
-        countryCode = Integer.parseInt(prompt("Enter Country Code: "));
+        countryCode = convertChoices(Integer.parseInt(prompt("Enter Country Code: "))); // Convert user input using convertChoices method
         areaCode = Integer.parseInt(prompt("Enter Area Code: "));
         contactNum = prompt("Enter Contact Number: ");
         return new Person(id, fname, lname, sex, occupation, contactNum, countryCode, areaCode);
     }
 
+    /**
+     * Receive prompt and return the inputted value back to the variable or process
+     * that requires
+     * it. Data type is String. Do not forget to type cast if possible.
+     * 
+     * @param phrase Phrase to be given to user when requiring input.
+     * @return Returns the data needed.
+     */
     private static String prompt(String phrase) {
         System.out.print(phrase);
         return input.nextLine();
